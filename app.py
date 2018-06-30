@@ -51,7 +51,14 @@ def on_chat_message(message):
     try:
         user = message['from']['username']
     except:
-        user = message['from']['last_name']
+        try:
+            user = message['from']['last_name']
+        except:
+            try:
+                user = message['from']['first_name']
+            except:
+                user = message['from']['id']
+
 
     msg = message['text']
     print(user)
