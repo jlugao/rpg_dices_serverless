@@ -5,19 +5,10 @@ import json
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 from dices import lanca_d4, lanca_d6, lanca_d8, lanca_d10, lanca_d12, lanca_d20
 from decouple import config
+import re
 
 bot_token = config('BOT_TOKEN')
 bot = telepot.Bot(bot_token)
-
-
-# @hug.post('/start')
-# def receive(body):
-#     """ Simple Hug Server """
-#     print(body)
-#     msg = json.loads(body)['message']
-#     content_type, chat_type, chat_id = telepot.glance(message)
-#     bot.sendMessage(chat_id, 'Bem vindo ao bot de rolar dados do Tincani')
-#     return output
 
 dices = {
         'd4': lanca_d4,
@@ -31,9 +22,7 @@ dices = {
 @hug.post('/')
 def receive(body):
     """ Simple Hug Server """
-    # print(body)
     output = read_message(body)
-    # print(output)
     return output
 
 
@@ -59,11 +48,28 @@ def on_chat_message(message):
         http://telepot.readthedocs.io/en/latest/reference.html
     """
     content_type, chat_type, chat_id = telepot.glance(message)
-    print(chat_id)
-    if content_type == 'text' and message['text'][0] == '/':
-        if message['text'][:2] == '/d':
-            valor = dices[message['text'][1:]]()
-            bot.sendMessage(chat_id, f'{valor}')
+    try:
+        user = message['from']['username']
+    except:
+        user = message['from']['last_name']
+
+    msg = message['text']
+    print(user)
+    print(message)
+    try:
+        pass
+    except:
+        return
+    if content_type == 'text' and msg[0] == '/':
+        if msg[:2] == '/d':
+            try:
+                valor = dices[message['text'][1:]]()
+                bot.sendMessage(chat_id, f'{user} - {valor}')
+            except:
+                bot.sendMessage(chat_id, f'dado {msg} não encontrado')
+        elif re.match('\/\dd\d+',msg):
+            valor = ', '.join([ str(dices[msg[2:]]()) for i in range(int(msg[1]))])
+            bot.sendMessage(chat_id, f'{user} - {valor}')
         else:
             bot.sendMessage( chat_id,
                 text = 'Escolha um dado',
@@ -91,10 +97,14 @@ def on_callback_query(message):
     """
     query_id, from_id, query_data  = telepot.glance(message, flavor='callback_query')
     chat_id = message['message']['chat']['id']
-    # print(message)
     valor = dices[query_data]()
-    print(chat_id)
-    
-    bot.sendMessage(chat_id, text=f'{valor}')
+    try:
+        user = message['from']['username']
+        text = message['data']
+        
+        bot.sendMessage(chat_id, text=f'{user} - {text}\n{valor}')
+    except:
+        pass
+
 
     return True

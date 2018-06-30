@@ -8,7 +8,10 @@ bot = telepot.Bot(bot_token)
 
 #Set AWS endpoint gateway
 webhook = config('WEBHOOK')
-bot.setWebhook(webhook)
+result = bot.setWebhook(webhook)
+
+if result:
+    print(f'Webhook set to:{webhook}')
 
 #terminate webhook if sth gets wrong
 # bot.setWebhook("https://14c9bd96.ngrok.io")
